@@ -37,19 +37,20 @@ async def register(data: UserRegister, db: Session = Depends(get_db)):
         branch=data.branch,
         year=data.year,
         roll_number=data.roll_number,
-        is_verified=False,
+        is_verified=True,  # Auto-verify during registration for seamless joining
     )
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    # Send verification email
-    token = create_verification_token(user.email)
-    await send_verification_email(user.email, token)
+    # Send email only if it's the admin (other emails require domain verification on Resend free tier)
+    if user.email == "rishabhshukla2901@gmail.com":
+        token = create_verification_token(user.email)
+        await send_verification_email(user.email, token)
 
     return MessageResponse(
-        message="Registration successful! Check your email for a verification link.",
-        detail=f"Verification email sent to {user.email}",
+        message="Registration successful! You can now log in immediately.",
+        detail=f"Account for {user.email} is active and ready to use.",
     )
 
 
