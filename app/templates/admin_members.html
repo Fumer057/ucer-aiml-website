@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Members{% endblock %}
+{% block nav_members %}active{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>👥 Members</h1>
+  <div class="topbar-actions">
+    <input type="text" id="memberSearch" placeholder="Search by name or email..." style="padding:10px 16px;border:1.5px solid var(--border);border-radius:50px;font-size:0.85rem;width:260px;outline:none;font-family:var(--body);" oninput="filterMembers()"/>
+  </div>
+</div>
+
+<div class="stats-grid" id="memberStats">
+  <div class="stat-card stat-blue">
+    <div class="stat-label">Total</div>
+    <div class="stat-value" id="mTotal">—</div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-label">Verified</div>
+    <div class="stat-value" id="mVerified">—</div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-label">Admins</div>
+    <div class="stat-value" id="mAdmins">—</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>All Members</h2>
+    <span style="font-size:0.82rem;color:var(--muted);" id="memberCount"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Branch</th>
+          <th>Year</th>
+          <th>Status</th>
+          <th>Role</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="membersTable">
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">Loading members...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .confirm-overlay{position:fixed;inset:0;background:rgba(15,15,26,0.5);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center}
+  .confirm-overlay.open{display:flex}
+  .confirm-box{background:white;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,0.15)}
+  .confirm-box h3{font-family:var(--heading);font-size:1.1rem;margin-bottom:8px}
+  .confirm-box p{color:var(--muted);font-size:0.9rem;margin-bottom:20px}
+  .confirm-actions{display:flex;gap:10px;justify-content:center}
+</style>
+
+<!-- Delete Confirm Modal -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-box">
+    <h3>⚠️ Remove Member</h3>
+    <p id="confirmText">Are you sure?</p>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allMembers = [];
+  let pendingDeleteId = null;
+
+  async function loadMembers() {
+    const res = await apiCall('/api/admin/members');
+    if (!res) return;
+    allMembers = await res.json();
+
+    document.getElementById('mTotal').textContent = allMembers.length;
+    document.getElementById('mVerified').textContent = allMembers.filter(m => m.is_verified).length;
+    document.getElementById('mAdmins').textContent = allMembers.filter(m => m.is_admin).length;
+
+    renderMembers(allMembers);
+  }
+
+  function renderMembers(members) {
+    const body = document.getElementById('membersTable');
+    document.getElementById('memberCount').textContent = `Showing ${members.length} member${members.length !== 1 ? 's' : ''}`;
+
+    if (members.length === 0) {
+      body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">👤</div><h3>No members found</h3><p>No one matches your search.</p></div></td></tr>`;
+      return;
+    }
+
+    body.innerHTML = members.map((m, i) => `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="avatar" style="background:${getGradient(i)}">${getInitials(m.first_name, m.last_name)}</div>
+            <div>
+              <div class="name">${m.first_name} ${m.last_name}</div>
+              <div class="email">${m.email}</div>
+            </div>
+          </div>
+        </td>
+        <td>${m.branch || '—'}</td>
+        <td>${m.year || '—'}</td>
+        <td>${m.is_verified ? '<span class="badge badge-green">Verified</span>' : '<span class="badge badge-yellow">Pending</span>'}</td>
+        <td>${m.is_admin ? '<span class="badge badge-blue">Admin</span>' : '<span class="badge" style="background:#F3F4F6;color:#6B7280;">Member</span>'}</td>
+        <td>${formatDate(m.created_at)}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-outline" data-action="verify" data-id="${m.id}" title="Toggle verification" style="color:var(--green);border-color:#bbf7d0;">
+              ${m.is_verified ? '✓' : '◯'}
+            </button>
+            <button class="btn btn-sm btn-outline" data-action="toggle" data-id="${m.id}" title="Toggle admin">
+              ${m.is_admin ? '🔓' : '🔒'}
+            </button>
+            <button class="btn btn-sm btn-outline" data-action="delete" data-id="${m.id}" data-name="${m.first_name} ${m.last_name}" title="Remove" style="color:var(--red);border-color:#FECACA;">
+              ✕
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-action="verify"]').forEach(btn => {
+      btn.addEventListener('click', () => toggleVerify(btn.dataset.id));
+    });
+    body.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+      btn.addEventListener('click', () => toggleAdmin(btn.dataset.id));
+    });
+    body.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', () => showDeleteConfirm(btn.dataset.id, btn.dataset.name));
+    });
+  }
+
+  function filterMembers() {
+    const q = document.getElementById('memberSearch').value.toLowerCase();
+    const filtered = allMembers.filter(m =>
+      `${m.first_name} ${m.last_name} ${m.email}`.toLowerCase().includes(q)
+    );
+    renderMembers(filtered);
+  }
+
+  async function toggleVerify(userId) {
+    const res = await apiCall(`/api/admin/members/${userId}/toggle-verify`, { method: 'PATCH' });
+    if (!res) return;
+    const data = await res.json();
+    showAdminToast(data.message);
+    loadMembers();
+  }
+
+  async function toggleAdmin(userId) {
+    const res = await apiCall(`/api/admin/members/${userId}/toggle-admin`, { method: 'PATCH' });
+    if (!res) return;
+    const data = await res.json();
+    showAdminToast(data.message);
+    loadMembers();
+  }
+
+  function showDeleteConfirm(userId, name) {
+    pendingDeleteId = userId;
+    document.getElementById('confirmText').textContent = `Are you sure you want to remove ${name}?`;
+    document.getElementById('confirmModal').classList.add('open');
+  }
+
+  function closeConfirm() {
+    pendingDeleteId = null;
+    document.getElementById('confirmModal').classList.remove('open');
+  }
+
+  async function confirmDelete() {
+    if (!pendingDeleteId) return;
+    const res = await apiCall(`/api/admin/members/${pendingDeleteId}`, { method: 'DELETE' });
+    closeConfirm();
+    if (!res) return;
+    const data = await res.json();
+    if (!res.ok) {
+      showAdminToast(data.detail || 'Failed to delete member.', true);
+      return;
+    }
+    showAdminToast(data.message);
+    loadMembers();
+  }
+
+  loadMembers();
+</script>
+{% endblock %}

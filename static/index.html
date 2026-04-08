@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UCER AIML Club</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #4361EE;
+    --blue-light: #EEF1FF;
+    --blue-mid: #7B93F9;
+    --purple: #7209B7;
+    --teal: #06B6D4;
+    --teal-light: #ECFEFF;
+    --bg: #F8F9FF;
+    --white: #ffffff;
+    --text: #0F0F1A;
+    --muted: #6B7280;
+    --border: #E5E7F0;
+    --card: #ffffff;
+    --heading: 'Outfit', sans-serif;
+    --body: 'DM Sans', sans-serif;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(67,97,238,0.08);
+    --shadow-lg: 0 12px 48px rgba(67,97,238,0.14);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(248,249,255,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 5%;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+    transition: box-shadow 0.3s;
+  }
+  nav.scrolled { box-shadow: var(--shadow); }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--heading); font-weight: 700; font-size: 1.15rem; color: var(--text);
+    text-decoration: none;
+  }
+  .nav-logo .logo-badge {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 0.75rem; font-weight: 800; letter-spacing: -0.5px;
+  }
+  .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+  .nav-links a { font-size: 0.9rem; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--blue); }
+  .nav-cta {
+    background: var(--blue); color: #FFFFFF !important;
+    padding: 9px 22px; border-radius: 50px;
+    font-size: 0.88rem; font-weight: 600; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .nav-cta:hover { background: #3251d4; transform: translateY(-1px); color: #FFFFFF !important; }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+  .hamburger span { display: block; width: 24px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    padding: 120px 5% 80px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(67,97,238,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 10% 80%, rgba(6,182,212,0.06) 0%, transparent 70%);
+  }
+  .hero-blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.18; animation: float 6s ease-in-out infinite;
+  }
+  .hero-blob.b1 { width: 420px; height: 420px; background: var(--blue); top: -80px; right: -60px; animation-delay: 0s; }
+  .hero-blob.b2 { width: 280px; height: 280px; background: var(--teal); bottom: 0; left: -40px; animation-delay: 2s; }
+  .hero-blob.b3 { width: 200px; height: 200px; background: var(--purple); top: 40%; right: 20%; animation-delay: 4s; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+
+  .hero-inner {
+    position: relative; z-index: 1;
+    max-width: 780px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 1.6rem;
+  }
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue-light); color: var(--blue);
+    padding: 6px 16px; border-radius: 50px;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px;
+    border: 1px solid rgba(67,97,238,0.18);
+  }
+  .hero-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+  .hero h1 {
+    font-family: var(--heading); font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 800; line-height: 1.12; letter-spacing: -1.5px; color: var(--text);
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero p {
+    font-size: clamp(1rem, 2vw, 1.15rem); color: var(--muted);
+    max-width: 560px; font-weight: 400; line-height: 1.7;
+  }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 0.4rem; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    color: white; padding: 14px 34px; border-radius: 50px;
+    font-size: 0.95rem; font-weight: 600; text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 24px rgba(67,97,238,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(67,97,238,0.4); }
+  .btn-secondary {
+    background: white; color: var(--text);
+    padding: 14px 34px; border-radius: 50px;
+    font-size: 0.95rem; font-weight: 600; text-decoration: none;
+    border: 1.5px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--blue-mid); transform: translateY(-2px); }
+  .hero-stats {
+    display: flex; gap: 3rem; margin-top: 1rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num {
+    font-family: var(--heading); font-size: 2rem; font-weight: 800; color: var(--text);
+    line-height: 1;
+  }
+  .hero-stat .num span { color: var(--blue); }
+  .hero-stat .label { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-top: 4px; }
+
+  /* ── SECTIONS ── */
+  section { padding: 90px 5%; }
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--blue-light); color: var(--blue);
+    padding: 5px 14px; border-radius: 50px;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-heading {
+    font-family: var(--heading); font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800; letter-spacing: -0.8px; line-height: 1.18;
+    max-width: 600px;
+  }
+  .section-sub { color: var(--muted); font-size: 1rem; max-width: 520px; margin-top: 0.6rem; line-height: 1.7; }
+  .text-center { text-align: center; }
+  .text-center .section-heading, .text-center .section-sub { margin-left: auto; margin-right: auto; }
+
+  /* ── ABOUT ── */
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+    align-items: center; margin-top: 3rem;
+  }
+  .about-visual {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .about-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s, color 0.3s, border-color 0.3s;
+    cursor: default;
+  }
+  .about-card .icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; margin-bottom: 12px;
+    background: var(--blue-light);
+    transition: background 0.3s;
+  }
+  .about-card h4 { font-family: var(--heading); font-size: 1rem; font-weight: 700; margin-bottom: 5px; transition: color 0.3s; }
+  .about-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; transition: color 0.3s; }
+  .about-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: var(--shadow-lg); 
+    background: linear-gradient(135deg, var(--blue), var(--purple)); 
+    color: white; 
+    border-color: transparent; 
+  }
+  .about-card:hover .icon { background: rgba(255,255,255,0.2); }
+  .about-card:hover h4 { color: white; }
+  .about-card:hover p { color: rgba(255,255,255,0.8); }
+  .about-text { display: flex; flex-direction: column; gap: 1.4rem; }
+  .about-text p { color: var(--muted); line-height: 1.8; font-size: 0.97rem; }
+  .about-text ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .about-text ul li {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.92rem; color: var(--text); font-weight: 500;
+  }
+  .about-text ul li::before {
+    content: ''; display: block; width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--purple)); flex-shrink: 0;
+  }
+
+  /* ── EVENTS ── */
+  .events { background: var(--white); }
+  .events-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px; margin-top: 3rem;
+  }
+  .event-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+    cursor: pointer;
+  }
+  .event-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+  .event-banner {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; position: relative; overflow: hidden;
+  }
+  .event-banner.blue { background: linear-gradient(135deg, #EEF1FF, #C7D2FE); }
+  .event-banner.teal { background: linear-gradient(135deg, #ECFEFF, #A5F3FC); }
+  .event-banner.purple { background: linear-gradient(135deg, #F5F3FF, #DDD6FE); }
+  .event-banner.coral { background: linear-gradient(135deg, #FFF1F2, #FECDD3); }
+  .event-body { padding: 20px; }
+  .event-meta {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .event-tag {
+    font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 50px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .tag-blue { background: var(--blue-light); color: var(--blue); }
+  .tag-teal { background: var(--teal-light); color: #0E7490; }
+  .tag-purple { background: #F5F3FF; color: #6D28D9; }
+  .tag-coral { background: #FFF1F2; color: #BE123C; }
+  .event-date { font-size: 0.78rem; color: var(--muted); }
+  .event-card h3 { font-family: var(--heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .event-card p { font-size: 0.84rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .event-footer { display: flex; align-items: center; justify-content: space-between; }
+  .event-spots { font-size: 0.78rem; color: var(--muted); }
+  .event-spots strong { color: var(--text); }
+  .event-btn {
+    font-size: 0.8rem; font-weight: 600; color: var(--blue);
+    background: var(--blue-light); padding: 6px 14px; border-radius: 50px;
+    text-decoration: none; transition: background 0.2s;
+  }
+  .event-btn:hover { background: #D4DBFE; }
+
+  /* ── TEAM ── */
+  .team-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px; margin-top: 3rem;
+  }
+  .team-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 20px 22px;
+    text-align: center; box-shadow: var(--shadow);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+  .team-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+  .team-avatar {
+    width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--heading); font-size: 1.5rem; font-weight: 700; color: white;
+  }
+  .av1 { background: linear-gradient(135deg, #4361EE, #7209B7); }
+  .av2 { background: linear-gradient(135deg, #06B6D4, #0F766E); }
+  .av3 { background: linear-gradient(135deg, #F97316, #DC2626); }
+  .av4 { background: linear-gradient(135deg, #8B5CF6, #EC4899); }
+  .av5 { background: linear-gradient(135deg, #10B981, #06B6D4); }
+  .av6 { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+  .team-card h4 { font-family: var(--heading); font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
+  .team-card .role { font-size: 0.8rem; color: var(--blue); font-weight: 600; margin-bottom: 6px; }
+  .team-card .dept { font-size: 0.76rem; color: var(--muted); }
+
+  /* ── GALLERY ── */
+  .gallery { background: var(--white); }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto;
+    gap: 14px; margin-top: 3rem;
+  }
+  .gallery-item {
+    border-radius: var(--radius-sm); overflow: hidden;
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem; cursor: pointer; position: relative;
+    transition: transform 0.25s;
+  }
+  .gallery-item:hover { transform: scale(1.03); }
+  .gallery-item.big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; min-height: 260px; font-size: 4rem; }
+  .gi1 { background: linear-gradient(135deg, #EEF1FF, #C7D2FE); }
+  .gi2 { background: linear-gradient(135deg, #ECFEFF, #A5F3FC); }
+  .gi3 { background: linear-gradient(135deg, #FFF7ED, #FED7AA); }
+  .gi4 { background: linear-gradient(135deg, #F5F3FF, #DDD6FE); }
+  .gi5 { background: linear-gradient(135deg, #F0FDF4, #BBF7D0); }
+  .gi6 { background: linear-gradient(135deg, #FFF1F2, #FECDD3); }
+  .gi7 { background: linear-gradient(135deg, #FEFCE8, #FDE68A); }
+  .gallery-item .overlay {
+    position: absolute; inset: 0; background: rgba(15,15,26,0.45);
+    display: flex; align-items: flex-end; padding: 14px;
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .gallery-item:hover .overlay { opacity: 1; }
+  .overlay span { font-family: var(--heading); font-size: 0.85rem; font-weight: 600; color: white; }
+
+  /* ── REGISTER ── */
+  .register { background: var(--bg); }
+  .register-inner {
+    max-width: 1100px; margin: 3rem auto 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start;
+  }
+  .register-info { display: flex; flex-direction: column; gap: 1.6rem; }
+  .register-info h2 { font-family: var(--heading); font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.6px; }
+  .register-info p { color: var(--muted); line-height: 1.8; font-size: 0.95rem; }
+  .register-perks { display: flex; flex-direction: column; gap: 12px; }
+  .perk {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+  }
+  .perk .perk-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .perk-text h5 { font-family: var(--heading); font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
+  .perk-text p { font-size: 0.8rem; color: var(--muted); }
+
+  .register-form {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 36px 32px;
+    box-shadow: var(--shadow-lg);
+  }
+  .form-title { font-family: var(--heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 24px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+  .field input, .field select {
+    padding: 11px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg);
+    font-family: var(--body); font-size: 0.9rem; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+  }
+  .field input::placeholder { color: #9CA3AF; }
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    color: white; border: none; border-radius: 50px;
+    font-family: var(--heading); font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 6px 24px rgba(67,97,238,0.3);
+    margin-top: 6px;
+  }
+  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .form-note { font-size: 0.76rem; color: var(--muted); text-align: center; margin-top: 12px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--text); color: rgba(255,255,255,0.7);
+    padding: 60px 5% 30px;
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px;
+    padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 30px;
+  }
+  .footer-brand { display: flex; flex-direction: column; gap: 14px; }
+  .footer-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--heading); font-size: 1.1rem; font-weight: 700; color: white; text-decoration: none;
+  }
+  .footer-logo .logo-badge {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800; color: white; letter-spacing: -0.5px;
+  }
+  .footer-brand p { font-size: 0.84rem; line-height: 1.7; max-width: 240px; }
+  .footer-col h5 { font-family: var(--heading); font-size: 0.88rem; font-weight: 700; color: white; margin-bottom: 14px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .footer-col ul li a { font-size: 0.84rem; color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s; }
+  .footer-col ul li a:hover { color: white; }
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; font-size: 0.8rem;
+  }
+  .footer-bottom a { color: rgba(255,255,255,0.5); text-decoration: none; }
+  .footer-bottom a:hover { color: white; }
+  .social-links { display: flex; gap: 10px; }
+  .social-btn {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; color: rgba(255,255,255,0.7); text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .social-btn:hover { background: rgba(255,255,255,0.14); color: white; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px; z-index: 999;
+    background: var(--text); color: white;
+    padding: 14px 22px; border-radius: var(--radius-sm);
+    font-size: 0.9rem; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transform: translateY(80px); opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast .tick { color: #4ade80; font-size: 1rem; }
+
+  /* ── REVEAL ANIMATIONS ── */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width: 900px) {
+    .about-grid { grid-template-columns: 1fr; }
+    .about-visual { order: -1; }
+    .register-inner { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+    .gallery-item.big { grid-column: span 2; }
+  }
+  @media(max-width: 640px) {
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column;
+      position: fixed; top: 68px; left: 0; right: 0;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 20px 5%; gap: 1.2rem; box-shadow: var(--shadow-lg);
+    }
+    .hamburger { display: flex; }
+    .form-row { grid-template-columns: 1fr; }
+    .hero-stats { gap: 2rem; }
+    .footer-top { grid-template-columns: 1fr; }
+    .gallery-grid { grid-template-columns: repeat(2,1fr); }
+    .gallery-item.big { grid-column: span 2; }
+    .team-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <div class="logo-badge">AI</div>
+    UCER AIML Club
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">About</a></li>
+    <li><a href="#events">Events</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="/login" style="font-weight:600; color:var(--text);">Sign In</a></li>
+    <li><a href="/admin/login" style="font-weight:600; color:var(--blue);">Admin</a></li>
+    <li><a href="#register" class="nav-cta">Join Now</a></li>
+  </ul>
+  <button class="hamburger" id="ham" aria-label="Menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-blob b1"></div>
+  <div class="hero-blob b2"></div>
+  <div class="hero-blob b3"></div>
+  <div class="hero-inner">
+    <div class="hero-pill"><span class="dot"></span> Now accepting members for 2024–25</div>
+    <h1>Where Curiosity Meets <span class="grad">Artificial Intelligence</span></h1>
+    <p>Join the official AI & Machine Learning club of United College of Engineering and Research. Build projects, attend workshops, and shape the future of technology — together.</p>
+    <div class="hero-actions">
+      <a href="#register" class="btn-primary">Join the Club →</a>
+      <a href="#events" class="btn-secondary">Upcoming Events</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num" id="heroStatMembers">500<span>+</span></div><div class="label">Active Members</div></div>
+      <div class="hero-stat"><div class="num" id="heroStatEvents">30<span>+</span></div><div class="label">Events per Year</div></div>
+      <div class="hero-stat"><div class="num" id="heroStatMentors">15<span>+</span></div><div class="label">Industry Mentors</div></div>
+      <div class="hero-stat"><div class="num" id="heroStatProjects">10<span>+</span></div><div class="label">Projects Launched</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-tag">✦ About Us</div>
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <div>
+        <h2 class="section-heading">Building the next generation of AI engineers</h2>
+        <p class="section-sub">The UCER AIML Club is a student-run community at United College of Engineering and Research, dedicated to exploring and applying the latest in artificial intelligence and machine learning.</p>
+      </div>
+      <p>We host hands-on workshops, hackathons, and project competitions that bridge the gap between academic concepts and real-world industry skills. Whether you're a beginner or an experienced coder, there's a place for you here.</p>
+      <ul>
+        <li>Weekly coding sessions & AI paper readings</li>
+        <li>Hackathons with industry-level problem statements</li>
+        <li>1-on-1 mentorship from senior students & professionals</li>
+        <li>Access to GPU resources and premium tools</li>
+        <li>Internship & research referral network</li>
+      </ul>
+    </div>
+    <div class="about-visual reveal">
+      <div class="about-card">
+        <div class="icon">🤖</div>
+        <h4>Machine Learning</h4>
+        <p>Supervised, unsupervised, and reinforcement learning — hands-on from day one.</p>
+      </div>
+      <div class="about-card">
+        <div class="icon">🧠</div>
+        <h4>Deep Learning</h4>
+        <p>CNNs, RNNs, Transformers — we build and train real neural networks together.</p>
+      </div>
+      <div class="about-card">
+        <div class="icon">💬</div>
+        <h4>NLP & LLMs</h4>
+        <p>Explore language models, chatbots, and the science behind modern AI assistants.</p>
+      </div>
+      <div class="about-card">
+        <div class="icon">👁️</div>
+        <h4>Computer Vision</h4>
+        <p>Object detection, image segmentation, and real-time video analysis projects.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events" class="events">
+  <div class="text-center reveal">
+    <div class="section-tag">📅 Events & Workshops</div>
+    <h2 class="section-heading">Learn, build, compete — all year long</h2>
+    <p class="section-sub">From beginner-friendly workshops to inter-college hackathons, we keep things exciting every week.</p>
+  </div>
+  <div class="events-grid" id="eventsContainer">
+    <div class="event-card reveal" style="grid-column: 1 / -1; padding: 60px; text-align: center; background: white; border: 1.5px dashed var(--blue); cursor: default;">
+      <h3 style="font-family: var(--heading); font-size: 1.5rem; margin-bottom: 10px;">Coming Soon!</h3>
+      <p style="color: var(--muted);">We are planning some amazing events, hackathons, and workshops for the semester. Stay tuned!</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="text-center reveal">
+    <div class="section-tag">👋 Meet the Team</div>
+    <h2 class="section-heading">The people behind UCER AIML Club</h2>
+    <p class="section-sub">Passionate students and faculty who keep the club thriving year-round.</p>
+  </div>
+  <div class="team-grid">
+    <div class="team-card reveal" style="grid-column: 1 / -1; padding: 40px;">
+      <h4>Core team members will be announced soon</h4>
+      <div class="dept">Stay tuned!</div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" class="gallery">
+  <div class="text-center reveal">
+    <div class="section-tag">📸 Gallery</div>
+    <h2 class="section-heading">Memories from our events</h2>
+    <p class="section-sub">A glimpse of workshops, hackathons, and the amazing community we've built.</p>
+  </div>
+  <div class="gallery-grid" style="margin-top:3rem;">
+    <div class="gallery-item big gi1 reveal">
+      🏆
+      <div class="overlay"><span>AIML Hackathon 2024</span></div>
+    </div>
+    <div class="gallery-item gi2 reveal">
+      🧠
+      <div class="overlay"><span>Neural Networks Workshop</span></div>
+    </div>
+    <div class="gallery-item gi3 reveal">
+      🎤
+      <div class="overlay"><span>Guest Lecture Series</span></div>
+    </div>
+    <div class="gallery-item gi4 reveal">
+      💻
+      <div class="overlay"><span>Coding Night</span></div>
+    </div>
+    <div class="gallery-item gi5 reveal">
+      🤝
+      <div class="overlay"><span>Industry Connect</span></div>
+    </div>
+    <div class="gallery-item gi6 reveal">
+      🎓
+      <div class="overlay"><span>Certificate Ceremony</span></div>
+    </div>
+    <div class="gallery-item gi7 reveal">
+      🚀
+      <div class="overlay"><span>Demo Day 2024</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section id="register" class="register">
+  <div class="text-center reveal">
+    <div class="section-tag">🎯 Join Us</div>
+    <h2 class="section-heading">Ready to start your AI journey?</h2>
+    <p class="section-sub">Membership is free and open to all UCER students. Fill in the form and we'll reach out with your welcome kit.</p>
+  </div>
+  <div class="register-inner">
+    <div class="register-info reveal">
+      <div>
+        <h2>Everything you need to grow in AI & ML</h2>
+        <p>Joining the UCER AIML Club gets you access to a thriving community, resources, and opportunities that go far beyond the classroom.</p>
+      </div>
+      <div class="register-perks">
+        <div class="perk">
+          <div class="perk-icon">🎓</div>
+          <div class="perk-text">
+            <h5>Free workshops & training</h5>
+            <p>Access all club workshops and bootcamps at zero cost as a member.</p>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🏅</div>
+          <div class="perk-text">
+            <h5>Certificates & credentials</h5>
+            <p>Earn certificates for every event and bootcamp you complete.</p>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🤝</div>
+          <div class="perk-text">
+            <h5>Mentorship network</h5>
+            <p>Get paired with senior students and industry mentors in your area of interest.</p>
+          </div>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">💼</div>
+          <div class="perk-text">
+            <h5>Internship referrals</h5>
+            <p>Priority referrals to our partner companies for internships and research roles.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="register-form reveal">
+      <div class="form-title">Create your membership</div>
+      <div class="form-row">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" id="fname" placeholder="Arjun"/>
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lname" placeholder="Kumar"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>College Email</label>
+        <input type="email" id="email" placeholder="roll@ucer.ac.in"/>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Branch</label>
+          <select id="branch">
+            <option value="">Select branch</option>
+            <option>Computer Science (CSE)</option>
+            <option>Information Technology (IT)</option>
+            <option>Electronics (ECE)</option>
+            <option>Mechanical</option>
+            <option>Civil</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Year of Study</label>
+          <select id="year">
+            <option value="">Select year</option>
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Area of Interest</label>
+        <select id="interest">
+          <option value="">Select interest</option>
+          <option>Machine Learning</option>
+          <option>Deep Learning</option>
+          <option>Natural Language Processing</option>
+          <option>Computer Vision</option>
+          <option>Data Science</option>
+          <option>Generative AI</option>
+          <option>All of the above</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Min. 6 characters"/>
+      </div>
+      <button class="submit-btn" id="registerBtn" onclick="handleRegister()">Join UCER AIML Club →</button>
+      <p class="form-note">🔒 Your data is safe. No spam, ever. Membership is completely free.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#" class="footer-logo">
+        <div class="logo-badge">AI</div>
+        UCER AIML Club
+      </a>
+      <p>The official Artificial Intelligence & Machine Learning club of United College of Engineering and Research, Pune.</p>
+      <div class="social-links">
+        <a href="#" class="social-btn" title="Instagram">📸</a>
+        <a href="#" class="social-btn" title="LinkedIn">💼</a>
+        <a href="#" class="social-btn" title="GitHub">💻</a>
+        <a href="#" class="social-btn" title="Discord">🎮</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h5>Quick Links</h5>
+      <ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#events">Events</a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#register">Join Now</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Resources</h5>
+      <ul>
+        <li><a href="#">Learning Path</a></li>
+        <li><a href="#">Past Projects</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Newsletter</a></li>
+        <li><a href="#">Certificates</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Contact</h5>
+      <ul>
+        <li><a href="mailto:aiml@ucer.ac.in">aiml@ucer.ac.in</a></li>
+        <li><a href="#">Faculty Office — Block C</a></li>
+        <li><a href="#">UCER Campus, Pune</a></li>
+        <li><a href="#">Mon–Sat, 9am–5pm</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 UCER AIML Club, United College of Engineering and Research. All rights reserved.</span>
+    <div style="display:flex;gap:20px;">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="tick">✓</span>
+  <span id="toast-msg">Welcome to UCER AIML Club!</span>
+</div>
+
+<script>
+  // Navbar scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Hamburger menu
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
+  });
+
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 60);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Counter animation
+  function animateCounter(el, target, suffix = '') {
+    let start = 0;
+    const dur = 1800;
+    const step = 16;
+    const inc = target / (dur / step);
+    const timer = setInterval(() => {
+      start = Math.min(start + inc, target);
+      el.textContent = Math.floor(start) + suffix;
+      if (start >= target) clearInterval(timer);
+    }, step);
+  }
+  const statsObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      document.querySelectorAll('.hero-stat .num').forEach(el => {
+        const txt = el.textContent;
+        const num = parseInt(txt);
+        const suffix = txt.replace(/\d/g, '');
+        el.innerHTML = '0' + `<span>${suffix.slice(-1)}</span>`;
+        animateCounter(el.firstChild, num, '');
+      });
+      statsObserver.disconnect();
+    }
+  }, { threshold: 0.5 });
+  statsObserver.observe(document.querySelector('.hero-stats'));
+
+  // Registration — connected to FastAPI backend
+  async function handleRegister() {
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const branch = document.getElementById('branch').value;
+    const year = document.getElementById('year').value;
+    const password = document.getElementById('password').value;
+
+    if (!fname || !lname || !email || !branch || !year || !password) {
+      showToast('Please fill in all required fields.', false);
+      return;
+    }
+    if (!email.includes('@')) {
+      showToast('Please enter a valid email address.', false);
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', false);
+      return;
+    }
+
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.textContent = 'Registering...';
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: fname,
+          last_name: lname,
+          email: email,
+          password: password,
+          branch: branch,
+          year: year,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(`Welcome aboard, ${fname}! Check your email for verification. 🎉`, true);
+        document.querySelector('.register-form').querySelectorAll('input, select').forEach(el => {
+          if (el.tagName === 'SELECT') el.selectedIndex = 0;
+          else el.value = '';
+        });
+      } else {
+        showToast(data.detail || 'Registration failed. Please try again.', false);
+      }
+    } catch (err) {
+      showToast('Network error. Please try again.', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Join UCER AIML Club →';
+    }
+  }
+
+  function showToast(msg, success = true) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    toast.querySelector('.tick').textContent = success ? '✓' : '⚠';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3800);
+  }
+
+  // Counter animation
+  function animateValue(id, endValueStr, duration) {
+    const obj = document.getElementById(id);
+    if (!obj) return;
+    
+    // Extract numeric part and suffix (e.g., "500+" -> num: 500, suffix: "+")
+    const match = endValueStr.match(/(\d+)(.*)/);
+    if (!match) {
+      obj.innerHTML = endValueStr;
+      return;
+    }
+    
+    const end = parseInt(match[1], 10);
+    const suffix = match[2] || "";
+    const suffixHtml = suffix ? `<span>${suffix}</span>` : "";
+    
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Ease out quad
+      const easeProgress = progress * (2 - progress);
+      const current = Math.floor(easeProgress * end);
+      obj.innerHTML = current + suffixHtml;
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
+
+  // Fetch dynamic stats from backend
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        const sMap = {};
+        settings.forEach(s => sMap[s.key] = s.value);
+        
+        const duration = 2000; // 2 seconds animation
+        if (sMap['stat_members']) animateValue('heroStatMembers', sMap['stat_members'], duration);
+        if (sMap['stat_events']) animateValue('heroStatEvents', sMap['stat_events'], duration);
+        if (sMap['stat_mentors']) animateValue('heroStatMentors', sMap['stat_mentors'], duration);
+        if (sMap['stat_projects']) animateValue('heroStatProjects', sMap['stat_projects'], duration);
+      }
+    } catch (err) {
+      console.error("Failed to load dynamic stats", err);
+    }
+  }
+  loadStats();
+</script>
+</body>
+</html>

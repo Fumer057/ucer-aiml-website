@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block nav_events %}active{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>📅 Events</h1>
+  <div class="topbar-actions">
+    <button class="btn btn-primary" onclick="openCreateModal()">+ Create Event</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>All Events</h2>
+    <span style="font-size:0.82rem;color:var(--muted);" id="eventCount"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Spots</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="eventsTable">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px;">Loading events...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create/Edit Event Modal -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <h2 id="modalTitle">Create Event</h2>
+    <input type="hidden" id="editEventId"/>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Event Title</label>
+        <input type="text" id="evTitle" placeholder="AIML Hack 2025"/>
+      </div>
+      <div class="form-group full">
+        <label>Description</label>
+        <textarea id="evDesc" placeholder="A 24-hour hackathon focused on AI..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Event Type</label>
+        <select id="evType">
+          <option value="hackathon">🏆 Hackathon</option>
+          <option value="workshop">🧠 Workshop</option>
+          <option value="talk">💬 Talk</option>
+          <option value="bootcamp">👁️ Bootcamp</option>
+          <option value="competition">📊 Competition</option>
+          <option value="showcase">🚀 Showcase</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Banner Color</label>
+        <select id="evColor">
+          <option value="blue">🔵 Blue</option>
+          <option value="teal">🟢 Teal</option>
+          <option value="purple">🟣 Purple</option>
+          <option value="coral">🔴 Coral</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="datetime-local" id="evStart"/>
+      </div>
+      <div class="form-group">
+        <label>End Date (optional)</label>
+        <input type="datetime-local" id="evEnd"/>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="evLocation" placeholder="Auditorium A"/>
+      </div>
+      <div class="form-group">
+        <label>Max Spots (blank = unlimited)</label>
+        <input type="number" id="evSpots" placeholder="200" min="1"/>
+      </div>
+      <div class="form-group">
+        <label>Registration</label>
+        <select id="evOpen">
+          <option value="false">🔒 Closed</option>
+          <option value="true">✅ Open</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveEvent()">Create Event</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let allEvents = [];
+
+  async function loadEvents() {
+    const res = await apiCall('/api/events/');
+    if (!res) return;
+    allEvents = await res.json();
+    document.getElementById('eventCount').textContent = `${allEvents.length} event${allEvents.length !== 1 ? 's' : ''}`;
+
+    const body = document.getElementById('eventsTable');
+    if (allEvents.length === 0) {
+      body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📅</div><h3>No events yet</h3><p>Create your first event to get started.</p></div></td></tr>`;
+      return;
+    }
+
+    const typeColors = { hackathon: 'blue', workshop: 'teal', talk: 'purple', bootcamp: 'coral', competition: 'blue', showcase: 'teal' };
+    const typeEmoji = { hackathon: '🏆', workshop: '🧠', talk: '💬', bootcamp: '👁️', competition: '📊', showcase: '🚀' };
+
+    body.innerHTML = allEvents.map(ev => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--blue-light);">
+              ${typeEmoji[ev.event_type] || '🎯'}
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;">${ev.title}</div>
+              <div style="font-size:0.78rem;color:var(--muted);">${ev.location || 'TBD'}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge badge-${typeColors[ev.event_type] || 'blue'}" style="text-transform:capitalize;">${ev.event_type}</span></td>
+        <td>${formatDate(ev.start_date)}</td>
+        <td>${ev.max_spots ? `${ev.spots_taken}/${ev.max_spots}` : `${ev.spots_taken} / ∞`}</td>
+        <td>${ev.is_open ? '<span class="badge badge-green">Open</span>' : '<span class="badge badge-red">Closed</span>'}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-outline" onclick="editEvent('${ev.id}')">✏️</button>
+            <button class="btn btn-sm btn-outline" onclick="toggleEventStatus('${ev.id}', ${ev.is_open})">${ev.is_open ? '🔒' : '✅'}</button>
+            <button class="btn btn-sm btn-outline" onclick="deleteEvent('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')" style="color:var(--red);border-color:#FECACA;">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Create Event';
+    document.getElementById('modalSaveBtn').textContent = 'Create Event';
+    document.getElementById('editEventId').value = '';
+    document.getElementById('evTitle').value = '';
+    document.getElementById('evDesc').value = '';
+    document.getElementById('evType').value = 'hackathon';
+    document.getElementById('evColor').value = 'blue';
+    document.getElementById('evStart').value = '';
+    document.getElementById('evEnd').value = '';
+    document.getElementById('evLocation').value = '';
+    document.getElementById('evSpots').value = '';
+    document.getElementById('evOpen').value = 'false';
+    document.getElementById('eventModal').classList.add('open');
+  }
+
+  function editEvent(eventId) {
+    const ev = allEvents.find(e => e.id === eventId);
+    if (!ev) return;
+    document.getElementById('modalTitle').textContent = 'Edit Event';
+    document.getElementById('modalSaveBtn').textContent = 'Save Changes';
+    document.getElementById('editEventId').value = ev.id;
+    document.getElementById('evTitle').value = ev.title;
+    document.getElementById('evDesc').value = ev.description || '';
+    document.getElementById('evType').value = ev.event_type;
+    document.getElementById('evColor').value = ev.banner_color;
+    document.getElementById('evStart').value = ev.start_date ? ev.start_date.slice(0, 16) : '';
+    document.getElementById('evEnd').value = ev.end_date ? ev.end_date.slice(0, 16) : '';
+    document.getElementById('evLocation').value = ev.location || '';
+    document.getElementById('evSpots').value = ev.max_spots || '';
+    document.getElementById('evOpen').value = ev.is_open ? 'true' : 'false';
+    document.getElementById('eventModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('eventModal').classList.remove('open');
+  }
+
+  async function saveEvent() {
+    const eventId = document.getElementById('editEventId').value;
+    const payload = {
+      title: document.getElementById('evTitle').value.trim(),
+      description: document.getElementById('evDesc').value.trim() || null,
+      event_type: document.getElementById('evType').value,
+      banner_color: document.getElementById('evColor').value,
+      start_date: new Date(document.getElementById('evStart').value).toISOString(),
+      end_date: document.getElementById('evEnd').value ? new Date(document.getElementById('evEnd').value).toISOString() : null,
+      location: document.getElementById('evLocation').value.trim() || null,
+      max_spots: document.getElementById('evSpots').value ? parseInt(document.getElementById('evSpots').value) : null,
+      is_open: document.getElementById('evOpen').value === 'true',
+    };
+
+    if (!payload.title || !document.getElementById('evStart').value) {
+      showAdminToast('Title and Start Date are required.', true);
+      return;
+    }
+
+    let res;
+    if (eventId) {
+      res = await apiCall(`/api/admin/events/${eventId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    } else {
+      res = await apiCall('/api/admin/events', { method: 'POST', body: JSON.stringify(payload) });
+    }
+
+    if (!res || !res.ok) {
+      const err = res ? await res.json() : {};
+      showAdminToast(err.detail || 'Failed to save event.', true);
+      return;
+    }
+
+    showAdminToast(eventId ? 'Event updated!' : 'Event created!');
+    closeModal();
+    loadEvents();
+  }
+
+  async function toggleEventStatus(eventId, isCurrentlyOpen) {
+    const res = await apiCall(`/api/admin/events/${eventId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_open: !isCurrentlyOpen }),
+    });
+    if (!res || !res.ok) { showAdminToast('Failed to update event.', true); return; }
+    showAdminToast(isCurrentlyOpen ? 'Registration closed' : 'Registration opened');
+    loadEvents();
+  }
+
+  async function deleteEvent(eventId, title) {
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    const res = await apiCall(`/api/admin/events/${eventId}`, { method: 'DELETE' });
+    if (!res || !res.ok) { showAdminToast('Failed to delete event.', true); return; }
+    showAdminToast('Event deleted');
+    loadEvents();
+  }
+
+  loadEvents();
+</script>
+{% endblock %}

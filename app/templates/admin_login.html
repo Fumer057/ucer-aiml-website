@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { background: linear-gradient(135deg, #EEF1FF 0%, #F8F9FF 100%); }
+  .sidebar, .mobile-toggle { display: none !important; }
+  .main { margin-left: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+
+  .login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 12px 48px rgba(67,97,238,0.12);
+    text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.1rem; font-weight: 800; font-family: var(--heading);
+    margin: 0 auto 20px;
+  }
+  .login-card h1 {
+    font-family: var(--heading); font-size: 1.5rem; font-weight: 800;
+    margin-bottom: 6px; letter-spacing: -0.5px;
+  }
+  .login-card .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+  .login-card .form-group { text-align: left; }
+  .login-card .btn-primary { width: 100%; justify-content: center; padding: 13px; font-size: 0.92rem; margin-top: 8px; }
+  .login-error { color: var(--red); font-size: 0.82rem; margin-top: 12px; display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-card">
+  <div class="login-logo">AI</div>
+  <h1>Admin Panel</h1>
+  <p class="subtitle">Sign in with your admin account</p>
+
+  <div class="form-group">
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="admin@ucer.ac.in"/>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="loginPassword" placeholder="Your password"/>
+  </div>
+  <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Sign in →</button>
+  <p class="login-error" id="loginError"></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // If already logged in, redirect
+  if (authToken) window.location.href = '/admin';
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) { errorEl.textContent = 'Please fill in all fields.'; errorEl.style.display = 'block'; return; }
+
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    errorEl.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorEl.textContent = data.detail || 'Invalid credentials';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const meRes = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${data.access_token}` },
+      });
+      const me = await meRes.json();
+
+      if (!me.is_admin) {
+        errorEl.textContent = 'Access denied. Admin account required.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      localStorage.setItem('admin_token', data.access_token);
+      window.location.href = '/admin';
+    } catch (err) {
+      errorEl.textContent = 'Network error. Please try again.';
+      errorEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign in →';
+    }
+  }
+
+  document.getElementById('loginPassword').addEventListener('keypress', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+{% endblock %}

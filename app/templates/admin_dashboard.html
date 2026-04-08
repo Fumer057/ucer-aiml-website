@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <h1>📊 Dashboard</h1>
+  <div class="topbar-actions">
+    <a href="/admin/members" class="btn btn-outline">View Members</a>
+    <a href="/admin/events" class="btn btn-primary">+ New Event</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card stat-blue">
+    <div class="stat-label">Total Members</div>
+    <div class="stat-value" id="statMembers">—</div>
+    <div class="stat-sub">All registered users</div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-label">Verified Members</div>
+    <div class="stat-value" id="statVerified">—</div>
+    <div class="stat-sub">Email confirmed</div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-label">Total Events</div>
+    <div class="stat-value" id="statEvents">—</div>
+    <div class="stat-sub">Created events</div>
+  </div>
+  <div class="stat-card stat-teal">
+    <div class="stat-label">Event Registrations</div>
+    <div class="stat-value" id="statRegistrations">—</div>
+    <div class="stat-sub">Total sign-ups</div>
+  </div>
+</div>
+
+<!-- Branch breakdown -->
+<div class="card">
+  <div class="card-header">
+    <h2>Members by Branch</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Branch</th><th>Members</th><th>% of Total</th></tr></thead>
+      <tbody id="branchTable"><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:30px;">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Recent members -->
+<div class="card">
+  <div class="card-header">
+    <h2>Recent Members</h2>
+    <a href="/admin/members" class="btn btn-sm btn-outline">View All →</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Member</th><th>Branch</th><th>Year</th><th>Status</th><th>Joined</th></tr></thead>
+      <tbody id="recentMembers"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<!-- Landing Page Settings -->
+<div class="card">
+  <div class="card-header">
+    <h2>Landing Page Statistics</h2>
+    <button class="btn btn-sm btn-primary" onclick="saveSettings()">Save Changes</button>
+  </div>
+  <div style="padding: 24px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="form-group" style="margin: 0;">
+      <label>Active Members shown:</label>
+      <input type="text" id="setting_stat_members" class="form-control" placeholder="e.g. 500+"/>
+    </div>
+    <div class="form-group" style="margin: 0;">
+      <label>Events per Year shown:</label>
+      <input type="text" id="setting_stat_events" class="form-control" placeholder="e.g. 30+"/>
+    </div>
+    <div class="form-group" style="margin: 0;">
+      <label>Industry Mentors shown:</label>
+      <input type="text" id="setting_stat_mentors" class="form-control" placeholder="e.g. 15+"/>
+    </div>
+    <div class="form-group" style="margin: 0;">
+      <label>Projects Launched shown:</label>
+      <input type="text" id="setting_stat_projects" class="form-control" placeholder="e.g. 10+"/>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadDashboard() {
+    // Load stats
+    const statsRes = await apiCall('/api/admin/stats');
+    if (!statsRes) return;
+    const stats = await statsRes.json();
+
+    document.getElementById('statMembers').textContent = stats.total_members;
+    document.getElementById('statVerified').textContent = stats.verified_members;
+    document.getElementById('statEvents').textContent = stats.total_events;
+    document.getElementById('statRegistrations').textContent = stats.total_event_registrations;
+
+    // Branch table
+    const branches = stats.members_by_branch || {};
+    const total = stats.total_members || 1;
+    const branchBody = document.getElementById('branchTable');
+
+    if (Object.keys(branches).length === 0) {
+      branchBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:30px;">No members yet</td></tr>';
+    } else {
+      branchBody.innerHTML = Object.entries(branches)
+        .sort((a, b) => b[1] - a[1])
+        .map(([branch, count]) => `
+          <tr>
+            <td><strong>${branch}</strong></td>
+            <td>${count}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;">
+                  <div style="width:${Math.round(count/total*100)}%;height:100%;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:3px;"></div>
+                </div>
+                <span style="font-size:0.82rem;color:var(--muted);min-width:40px;">${Math.round(count/total*100)}%</span>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+    }
+
+    // Recent members
+    const membersRes = await apiCall('/api/admin/members');
+    if (!membersRes) return;
+    const members = await membersRes.json();
+    const recent = members.slice(0, 8);
+    const membersBody = document.getElementById('recentMembers');
+
+    if (recent.length === 0) {
+      membersBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:30px;">No members yet</td></tr>';
+    } else {
+      membersBody.innerHTML = recent.map((m, i) => `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="background:${getGradient(i)}">${getInitials(m.first_name, m.last_name)}</div>
+              <div>
+                <div class="name">${m.first_name} ${m.last_name}</div>
+                <div class="email">${m.email}</div>
+              </div>
+            </div>
+          </td>
+          <td>${m.branch || '—'}</td>
+          <td>${m.year || '—'}</td>
+          <td>${m.is_verified ? '<span class="badge badge-green">Verified</span>' : '<span class="badge badge-yellow">Pending</span>'}</td>
+          <td>${formatDate(m.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+    // Settings load
+    const settingsRes = await apiCall('/api/admin/settings');
+    if (settingsRes) {
+      const settings = await settingsRes.json();
+      const sMap = {};
+      settings.forEach(s => sMap[s.key] = s.value);
+      document.getElementById('setting_stat_members').value = sMap['stat_members'] || '500+';
+      document.getElementById('setting_stat_events').value = sMap['stat_events'] || '30+';
+      document.getElementById('setting_stat_mentors').value = sMap['stat_mentors'] || '15+';
+      document.getElementById('setting_stat_projects').value = sMap['stat_projects'] || '10+';
+    }
+  }
+
+  async function saveSettings() {
+    const keys = ['stat_members', 'stat_events', 'stat_mentors', 'stat_projects'];
+    let error = false;
+    for (const key of keys) {
+      const val = document.getElementById(`setting_${key}`).value.trim();
+      const res = await apiCall(`/api/admin/settings/${key}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ value: val })
+      });
+      if (!res) error = true;
+    }
+    if (!error) {
+      alert('Settings saved successfully!');
+    }
+  }
+
+  loadDashboard();
+</script>
+{% endblock %}

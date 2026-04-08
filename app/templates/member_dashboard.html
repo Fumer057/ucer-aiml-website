@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Dashboard — UCER AIML Club</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--blue:#4361EE;--blue-light:#EEF1FF;--purple:#7209B7;--teal:#06B6D4;--green:#10B981;--bg:#F8F9FF;--white:#fff;--text:#0F0F1A;--muted:#6B7280;--border:#E5E7F0;--card:#fff;--heading:'Outfit',sans-serif;--body:'DM Sans',sans-serif;--radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06)}
+    body{font-family:var(--body);background:var(--bg);color:var(--text);line-height:1.6}
+
+    /* NAV */
+    .dash-nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(248,249,255,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px}
+    .dash-nav .logo{display:flex;align-items:center;gap:10px;font-family:var(--heading);font-weight:700;font-size:1.05rem;color:var(--text);text-decoration:none}
+    .dash-nav .logo .badge{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;color:white;font-size:0.72rem;font-weight:800}
+    .dash-nav-links{display:flex;align-items:center;gap:16px}
+    .dash-nav-links a{font-size:0.85rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
+    .dash-nav-links a:hover{color:var(--blue)}
+    .logout-btn{background:var(--blue-light);color:var(--blue);padding:8px 18px;border-radius:50px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;transition:background .2s}
+    .logout-btn:hover{background:#D4DBFE}
+
+    /* CONTENT */
+    .dash-content{max-width:900px;margin:88px auto 60px;padding:0 20px}
+    .welcome-card{background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:var(--radius);padding:36px 32px;color:white;margin-bottom:28px}
+    .welcome-card h1{font-family:var(--heading);font-size:1.6rem;font-weight:800;margin-bottom:6px}
+    .welcome-card p{font-size:0.92rem;opacity:0.85}
+    .welcome-card .status{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:5px 14px;border-radius:50px;font-size:0.78rem;font-weight:600;background:rgba(255,255,255,0.2)}
+
+    .section-title{font-family:var(--heading);font-size:1.15rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden}
+    .card-body{padding:24px}
+
+    .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .profile-field label{font-size:0.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+    .profile-field .value{font-size:0.92rem;font-weight:500}
+
+    .events-list{display:flex;flex-direction:column;gap:12px}
+    .event-item{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
+    .event-item .emoji{font-size:1.5rem;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--blue-light);border-radius:10px}
+    .event-item .info h4{font-family:var(--heading);font-size:0.92rem;font-weight:700}
+    .event-item .info p{font-size:0.78rem;color:var(--muted)}
+    .event-item .badge{padding:4px 12px;border-radius:50px;font-size:0.72rem;font-weight:700;margin-left:auto;flex-shrink:0}
+    .badge-green{background:#ECFDF5;color:#059669}
+    .badge-yellow{background:#FFFBEB;color:#D97706}
+
+    .empty{text-align:center;padding:40px 20px;color:var(--muted)}
+    .empty .icon{font-size:2.5rem;margin-bottom:10px}
+    .empty h3{font-family:var(--heading);font-weight:700;color:var(--text);margin-bottom:4px}
+
+    @media(max-width:640px){.profile-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<nav class="dash-nav">
+  <a href="/" class="logo"><div class="badge">AI</div> UCER AIML Club</a>
+  <div class="dash-nav-links">
+    <a href="/">Home</a>
+    <button class="logout-btn" onclick="logout()">Log out</button>
+  </div>
+</nav>
+
+<div class="dash-content">
+  <!-- Welcome -->
+  <div class="welcome-card" id="welcomeCard">
+    <h1>Welcome back!</h1>
+    <p>Loading your profile...</p>
+  </div>
+
+  <!-- Profile -->
+  <div class="section-title">👤 My Profile</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="profile-grid" id="profileGrid">
+        <div class="profile-field"><label>Loading...</label></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registered Events -->
+  <div class="section-title">📅 My Events</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="events-list" id="eventsList">
+        <div class="empty"><div class="icon">⏳</div><p>Loading...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('member_token') || localStorage.getItem('admin_token');
+  if (!token) window.location.href = '/#register';
+
+  async function loadDashboard() {
+    // Get profile
+    const meRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!meRes.ok) { window.location.href = '/#register'; return; }
+    const me = await meRes.json();
+
+    // Welcome card
+    document.getElementById('welcomeCard').innerHTML = `
+      <h1>Welcome back, ${me.first_name}! 👋</h1>
+      <p>Here's your AIML Club membership overview.</p>
+      <div class="status">${me.is_verified ? '✅ Verified Member' : '⏳ Email verification pending'}</div>
+    `;
+
+    // Profile
+    document.getElementById('profileGrid').innerHTML = `
+      <div class="profile-field"><label>Name</label><div class="value">${me.first_name} ${me.last_name}</div></div>
+      <div class="profile-field"><label>Email</label><div class="value">${me.email}</div></div>
+      <div class="profile-field"><label>Branch</label><div class="value">${me.branch || '—'}</div></div>
+      <div class="profile-field"><label>Year</label><div class="value">${me.year || '—'}</div></div>
+      <div class="profile-field"><label>Roll Number</label><div class="value">${me.roll_number || '—'}</div></div>
+      <div class="profile-field"><label>Member Since</label><div class="value">${new Date(me.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</div></div>
+    `;
+
+    // Events
+    const evRes = await fetch('/api/events/my/registrations', { headers: { 'Authorization': `Bearer ${token}` } });
+    const list = document.getElementById('eventsList');
+
+    if (!evRes.ok) {
+      list.innerHTML = '<div class="empty"><div class="icon">📅</div><h3>No events yet</h3><p>Check out upcoming events on the home page.</p></div>';
+      return;
+    }
+
+    const regs = await evRes.json();
+    if (regs.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="icon">📅</div><h3>No events yet</h3><p>Register for events on the home page!</p></div>';
+      return;
+    }
+
+    // Fetch event details
+    const eventsRes = await fetch('/api/events/');
+    const allEvents = await eventsRes.json();
+    const eventMap = {};
+    allEvents.forEach(e => eventMap[e.id] = e);
+
+    list.innerHTML = regs.map(r => {
+      const ev = eventMap[r.event_id] || {};
+      const statusBadge = r.status === 'registered'
+        ? '<span class="badge badge-green">Registered</span>'
+        : '<span class="badge badge-yellow">Waitlisted</span>';
+      return `
+        <div class="event-item">
+          <div class="emoji">${ev.emoji || '🎯'}</div>
+          <div class="info">
+            <h4>${ev.title || 'Event'}</h4>
+            <p>${ev.start_date ? new Date(ev.start_date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : ''} · ${ev.location || 'TBD'}</p>
+          </div>
+          ${statusBadge}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function logout() {
+    localStorage.removeItem('member_token');
+    localStorage.removeItem('admin_token');
+    window.location.href = '/';
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>
