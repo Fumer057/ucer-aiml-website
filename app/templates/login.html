@@ -55,8 +55,8 @@
 
 {% block scripts %}
 <script>
-  // If already logged in, redirect
-  if (localStorage.getItem('member_token')) window.location.href = '/dashboard';
+  // Clear any existing session to ensure clean login
+  localStorage.removeItem('member_token');
 
   async function handleLogin() {
     const email = document.getElementById('loginEmail').value.trim();

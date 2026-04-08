@@ -55,8 +55,9 @@
 
 {% block scripts %}
 <script>
-  // If already logged in, redirect
-  if (authToken) window.location.href = '/admin';
+  // Clear any existing session to ensure clean login
+  localStorage.removeItem('admin_token');
+  authToken = '';
 
   async function handleLogin() {
     const email = document.getElementById('loginEmail').value.trim();

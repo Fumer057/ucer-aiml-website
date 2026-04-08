@@ -885,7 +885,7 @@
       const data = await response.json();
 
       if (response.ok) {
-        showToast(`Welcome aboard, ${fname}! Check your email for verification. 🎉`, true);
+        showToast(`Welcome aboard, ${fname}! Registered successfully. 🎉`, true);
         document.querySelector('.register-form').querySelectorAll('input, select').forEach(el => {
           if (el.tagName === 'SELECT') el.selectedIndex = 0;
           else el.value = '';
