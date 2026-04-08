@@ -54,6 +54,7 @@ async def send_verification_email(to_email: str, token: str):
             subtype="html",
         )
 
+        print(f"DEBUG: Attempting to send email to {to_email} via {settings.SMTP_HOST}:{settings.SMTP_PORT}")
         await aiosmtplib.send(
             msg,
             hostname=settings.SMTP_HOST,
@@ -63,9 +64,12 @@ async def send_verification_email(to_email: str, token: str):
             use_tls=False,
             start_tls=True,
         )
+        print(f"DEBUG: Email successfully sent to {to_email}")
         logger.info(f"Verification email sent to {to_email}")
     except Exception as e:
         logger.error(f"Failed to send verification email to {to_email}: {e}")
         # Don't raise — registration should still work even if email fails
-        print(f"\n⚠️  Email send failed for {to_email}: {e}")
-        print(f"   Manual verification link: {verification_url}\n")
+        print(f"\n[SMTP ERROR] Failed to send email to {to_email}")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Detail: {str(e)}")
+        print(f"Manual verification link: {verification_url}\n")
