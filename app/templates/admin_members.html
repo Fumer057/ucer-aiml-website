@@ -59,6 +59,17 @@
   .confirm-box h3{font-family:var(--heading);font-size:1.1rem;margin-bottom:8px}
   .confirm-box p{color:var(--muted);font-size:0.9rem;margin-bottom:20px}
   .confirm-actions{display:flex;gap:10px;justify-content:center}
+
+  /* Details Modal Styles */
+  .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+  .details-item { display: flex; flex-direction: column; gap: 4px; }
+  .details-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .details-value { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+  .details-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .details-avatar { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; font-weight: 800; }
+  .details-name-wrap h3 { font-family: var(--heading); font-size: 1.25rem; font-weight: 800; line-height: 1.2; }
+  .details-name-wrap p { font-size: 0.88rem; color: var(--muted); }
+  @media (max-width: 500px) { .details-grid { grid-template-columns: 1fr; gap: 16px; } }
 </style>
 
 <!-- Delete Confirm Modal -->
@@ -69,6 +80,18 @@
     <div class="confirm-actions">
       <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
       <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member Details Modal -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal" style="max-width: 500px;">
+    <div id="detailsContent">
+      <div style="text-align:center;padding:40px;color:var(--muted);">Loading details...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeDetails()">Close</button>
     </div>
   </div>
 </div>
@@ -116,6 +139,9 @@
         <td>${formatDate(m.created_at)}</td>
         <td>
           <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-outline" data-action="view" data-id="${m.id}" data-index="${i}" title="View Details">
+              👁️
+            </button>
             <button class="btn btn-sm btn-outline" data-action="verify" data-id="${m.id}" title="Toggle verification" style="color:var(--green);border-color:#bbf7d0;">
               ${m.is_verified ? '✓' : '◯'}
             </button>
@@ -129,6 +155,10 @@
         </td>
       </tr>
     `).join('');
+
+    body.querySelectorAll('[data-action="view"]').forEach(btn => {
+      btn.addEventListener('click', () => showMemberDetails(btn.dataset.id, btn.dataset.index));
+    });
 
     body.querySelectorAll('[data-action="verify"]').forEach(btn => {
       btn.addEventListener('click', () => toggleVerify(btn.dataset.id));
@@ -144,9 +174,56 @@
   function filterMembers() {
     const q = document.getElementById('memberSearch').value.toLowerCase();
     const filtered = allMembers.filter(m =>
-      `${m.first_name} ${m.last_name} ${m.email}`.toLowerCase().includes(q)
+      `${m.first_name} ${m.last_name} ${m.email} ${m.roll_number || ''}`.toLowerCase().includes(q)
     );
     renderMembers(filtered);
+  }
+
+  function showMemberDetails(userId, index) {
+    const m = allMembers.find(user => user.id === userId);
+    if (!m) return;
+
+    const content = document.getElementById('detailsContent');
+    content.innerHTML = `
+      <div class="details-header">
+        <div class="details-avatar" style="background:${getGradient(index)}">${getInitials(m.first_name, m.last_name)}</div>
+        <div class="details-name-wrap">
+          <h3>${m.first_name} ${m.last_name}</h3>
+          <p>${m.role.charAt(0).toUpperCase() + m.role.slice(1)} • ${m.is_verified ? 'Verified Member' : 'Pending Verification'}</p>
+        </div>
+      </div>
+      <div class="details-grid">
+        <div class="details-item">
+          <span class="details-label">Email Address</span>
+          <span class="details-value">${m.email}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Phone Number</span>
+          <span class="details-value">${m.phone || 'Not provided'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Branch</span>
+          <span class="details-value">${m.branch || 'Not specified'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Year of Study</span>
+          <span class="details-value">${m.year || 'Not specified'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Roll Number</span>
+          <span class="details-value">${m.roll_number || 'Not provided'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Member Since</span>
+          <span class="details-value">${formatDate(m.created_at)}</span>
+        </div>
+      </div>
+    `;
+    document.getElementById('detailsModal').classList.add('open');
+  }
+
+  function closeDetails() {
+    document.getElementById('detailsModal').classList.remove('open');
   }
 
   async function toggleVerify(userId) {
