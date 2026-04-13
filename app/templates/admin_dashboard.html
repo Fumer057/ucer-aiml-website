@@ -19,9 +19,14 @@
     <div class="stat-sub">All registered users</div>
   </div>
   <div class="stat-card stat-green">
-    <div class="stat-label">Verified Members</div>
+    <div class="stat-label">Approved Members</div>
     <div class="stat-value" id="statVerified">—</div>
-    <div class="stat-sub">Email confirmed</div>
+    <div class="stat-sub">Manually verified</div>
+  </div>
+  <div class="stat-card stat-yellow">
+    <div class="stat-label">Pending Members</div>
+    <div class="stat-value" id="statPending">—</div>
+    <div class="stat-sub">Waiting for approval</div>
   </div>
   <div class="stat-card stat-purple">
     <div class="stat-label">Total Events</div>
@@ -97,7 +102,9 @@
     const stats = await statsRes.json();
 
     document.getElementById('statMembers').textContent = stats.total_members;
+    document.getElementById('statMembers').textContent = stats.total_members;
     document.getElementById('statVerified').textContent = stats.verified_members;
+    document.getElementById('statPending').textContent = stats.unverified_members;
     document.getElementById('statEvents').textContent = stats.total_events;
     document.getElementById('statRegistrations').textContent = stats.total_event_registrations;
 

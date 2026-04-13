@@ -18,6 +18,17 @@ from app.routers import auth, events, admin, pages
 async def lifespan(app: FastAPI):
     """Create database tables on startup."""
     create_tables()
+
+    # Migration: Add missing columns if they don't exist
+    from sqlalchemy import text
+    from app.database import engine
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS area_of_interest VARCHAR(100)"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"))
+    except Exception as e:
+        print(f"Migration error: {e}")
+
     print("\n[STARTED] UCER AIML Club API is running!")
     print("   [PAGE] Landing page: http://localhost:8000")
     print("   [DOCS] API docs:     http://localhost:8000/docs")

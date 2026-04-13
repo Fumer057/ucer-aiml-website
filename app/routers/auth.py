@@ -50,8 +50,8 @@ async def register(data: UserRegister, db: Session = Depends(get_db)):
         await send_verification_email(user.email, token)
 
     return MessageResponse(
-        message="Registration successful! You can now log in immediately.",
-        detail=f"Account for {user.email} is active and ready to use.",
+        message="Application submitted! Please wait for admin approval.",
+        detail=f"Registration for {user.email} is pending manual verification by an administrator.",
     )
 
 

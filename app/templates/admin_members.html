@@ -19,6 +19,10 @@
     <div class="stat-label">Verified</div>
     <div class="stat-value" id="mVerified">—</div>
   </div>
+  <div class="stat-card stat-yellow">
+    <div class="stat-label">Pending</div>
+    <div class="stat-value" id="mPending">—</div>
+  </div>
   <div class="stat-card stat-purple">
     <div class="stat-label">Admins</div>
     <div class="stat-value" id="mAdmins">—</div>
@@ -107,6 +111,7 @@
 
     document.getElementById('mTotal').textContent = allMembers.length;
     document.getElementById('mVerified').textContent = allMembers.filter(m => m.is_verified).length;
+    document.getElementById('mPending').textContent = allMembers.filter(m => !m.is_verified).length;
     document.getElementById('mAdmins').textContent = allMembers.filter(m => m.is_admin).length;
 
     renderMembers(allMembers);

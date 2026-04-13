@@ -94,7 +94,7 @@ def require_verified_user(user: User = Depends(require_user)) -> User:
     if not user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email not verified. Please verify your email first.",
+            detail="Account pending approval. Please wait for an administrator to verify your account.",
         )
     return user
 
