@@ -37,6 +37,7 @@ async def register(data: UserRegister, db: Session = Depends(get_db)):
         branch=data.branch,
         year=data.year,
         roll_number=data.roll_number,
+        area_of_interest=data.area_of_interest,
         is_verified=True,  # Auto-verify during registration for seamless joining
     )
     db.add(user)

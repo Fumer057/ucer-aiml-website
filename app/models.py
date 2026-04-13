@@ -25,6 +25,7 @@ class User(Base):
     branch = Column(String(100), nullable=True)
     year = Column(String(20), nullable=True)
     roll_number = Column(String(50), nullable=True)
+    area_of_interest = Column(String(100), nullable=True)
 
     # Status
     is_active = Column(Boolean, default=True)

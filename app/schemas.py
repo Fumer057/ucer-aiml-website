@@ -24,9 +24,10 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=128)
     phone: Optional[str] = None
-    branch: Optional[str] = None
-    year: Optional[str] = None
-    roll_number: Optional[str] = None
+    branch: str = Field(..., min_length=1)
+    year: str = Field(..., min_length=1)
+    roll_number: str = Field(..., min_length=1)
+    area_of_interest: str = Field(..., min_length=1)
 
 
 class UserLogin(BaseModel):
@@ -43,6 +44,7 @@ class UserResponse(BaseModel):
     branch: Optional[str] = None
     year: Optional[str] = None
     roll_number: Optional[str] = None
+    area_of_interest: Optional[str] = None
     is_verified: bool
     is_admin: bool
     role: str
