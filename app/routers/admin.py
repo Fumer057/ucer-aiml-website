@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.models import User, Event, EventRegistration
-from app.schemas import EventCreate, EventUpdate, EventResponse, MessageResponse, UserResponse
+from app.schemas import EventCreate, EventUpdate, EventResponse, MessageResponse, UserResponse, AdminEventRegistrationResponse
 from app.auth import require_admin
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -137,6 +137,36 @@ async def delete_event(
     db.delete(event)
     db.commit()
     return MessageResponse(message=f"Event '{event.title}' deleted")
+
+
+@router.get("/events/{event_id}/registrations", response_model=list[AdminEventRegistrationResponse])
+async def list_event_registrations(
+    event_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """List all registrations for a specific event."""
+    return (
+        db.query(EventRegistration)
+        .filter(EventRegistration.event_id == event_id)
+        .order_by(EventRegistration.registered_at.desc())
+        .all()
+    )
+
+
+@router.delete("/registrations/{reg_id}", response_model=MessageResponse)
+async def delete_registration(
+    reg_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Cancel a specific registration (admin only)."""
+    reg = db.query(EventRegistration).filter(EventRegistration.id == reg_id).first()
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registration not found")
+    db.delete(reg)
+    db.commit()
+    return MessageResponse(message="Member removed from event")
 
 
 # ── Analytics ──

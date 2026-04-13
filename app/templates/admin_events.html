@@ -98,9 +98,61 @@
     </div>
   </div>
 </div>
+
+<!-- Attendees Modal -->
+<div class="modal-overlay" id="attendeesModal">
+  <div class="modal" style="max-width:650px;">
+    <div class="card-header" style="border:none;padding:0 0 20px;">
+      <h2 id="attendeesTitle">Attendees</h2>
+      <span id="attendeeCountBadge" class="badge badge-blue">0</span>
+    </div>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto;border:1.5px solid var(--border);border-radius:12px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Status</th>
+            <th>Registered</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="attendeesTable">
+          <tr><td colspan="4" style="text-align:center;padding:30px;color:var(--muted);">Select an event...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeAttendeesModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member Details Modal (Reused) -->
+<div class="modal-overlay" id="detailsModal" style="z-index:210;">
+  <div class="modal" style="max-width: 500px;">
+    <div id="detailsContent">
+      <div style="text-align:center;padding:40px;color:var(--muted);">Loading details...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeDetails()">Close</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<style>
+  /* Reused details styles */
+  .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+  .details-item { display: flex; flex-direction: column; gap: 4px; }
+  .details-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .details-value { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+  .details-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .details-avatar { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; font-weight: 800; }
+  .details-name-wrap h3 { font-family: var(--heading); font-size: 1.25rem; font-weight: 800; line-height: 1.2; }
+  .details-name-wrap p { font-size: 0.88rem; color: var(--muted); }
+  @media (max-width: 500px) { .details-grid { grid-template-columns: 1fr; gap: 16px; } }
+</style>
 <script>
   let allEvents = [];
 
@@ -138,9 +190,10 @@
         <td>${ev.is_open ? '<span class="badge badge-green">Open</span>' : '<span class="badge badge-red">Closed</span>'}</td>
         <td>
           <div style="display:flex;gap:6px;">
-            <button class="btn btn-sm btn-outline" onclick="editEvent('${ev.id}')">✏️</button>
-            <button class="btn btn-sm btn-outline" onclick="toggleEventStatus('${ev.id}', ${ev.is_open})">${ev.is_open ? '🔒' : '✅'}</button>
-            <button class="btn btn-sm btn-outline" onclick="deleteEvent('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')" style="color:var(--red);border-color:#FECACA;">🗑</button>
+            <button class="btn btn-sm btn-outline" onclick="openAttendeesModal('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')" title="Manage Attendees">👥</button>
+            <button class="btn btn-sm btn-outline" onclick="editEvent('${ev.id}')" title="Edit Event">✏️</button>
+            <button class="btn btn-sm btn-outline" onclick="toggleEventStatus('${ev.id}', ${ev.is_open})" title="Toggle Registration">${ev.is_open ? '🔒' : '✅'}</button>
+            <button class="btn btn-sm btn-outline" onclick="deleteEvent('${ev.id}', '${ev.title.replace(/'/g, "\\'")}')" style="color:var(--red);border-color:#FECACA;" title="Delete Event">🗑</button>
           </div>
         </td>
       </tr>
@@ -238,6 +291,113 @@
     if (!res || !res.ok) { showAdminToast('Failed to delete event.', true); return; }
     showAdminToast('Event deleted');
     loadEvents();
+  }
+
+  // ── Attendees Management ──
+  let activeEventId = null;
+  let activeAttendees = [];
+
+  async function openAttendeesModal(eventId, title) {
+    activeEventId = eventId;
+    document.getElementById('attendeesTitle').textContent = `Attendees: ${title}`;
+    document.getElementById('attendeesModal').classList.add('open');
+    loadAttendees();
+  }
+
+  function closeAttendeesModal() {
+    document.getElementById('attendeesModal').classList.remove('open');
+    activeEventId = null;
+  }
+
+  async function loadAttendees() {
+    const res = await apiCall(`/api/admin/events/${activeEventId}/registrations`);
+    if (!res) return;
+    activeAttendees = await res.json();
+    document.getElementById('attendeeCountBadge').textContent = activeAttendees.length;
+    renderAttendees();
+  }
+
+  function renderAttendees() {
+    const body = document.getElementById('attendeesTable');
+    if (activeAttendees.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted);">No one registered yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = activeAttendees.map((reg, i) => `
+      <tr>
+        <td>
+          <div class="user-cell" style="cursor:pointer;" onclick="showMemberDetails('${reg.user.id}', ${i})">
+            <div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:${getGradient(i)}">${getInitials(reg.user.first_name, reg.user.last_name)}</div>
+            <div>
+              <div class="name" style="font-size:0.8rem;">${reg.user.first_name} ${reg.user.last_name}</div>
+              <div class="email" style="font-size:0.75rem;">${reg.user.email}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge ${reg.status === 'registered' ? 'badge-green' : 'badge-yellow'}" style="font-size:0.65rem;">${reg.status}</span></td>
+        <td style="font-size:0.75rem;">${formatDate(reg.registered_at)}</td>
+        <td>
+          <button class="btn btn-sm btn-outline" style="color:var(--red);border-color:#FECACA;" onclick="removeAttendee('${reg.id}', '${reg.user.first_name}')">✕</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function removeAttendee(regId, name) {
+    if (!confirm(`Remove ${name} from this event?`)) return;
+    const res = await apiCall(`/api/admin/registrations/${regId}`, { method: 'DELETE' });
+    if (!res || !res.ok) { showAdminToast('Failed to remove attendee.', true); return; }
+    showAdminToast(`${name} removed from event`);
+    loadAttendees();
+    loadEvents(); // Update spot count
+  }
+
+  // ── Shared Member Details Logic ──
+  function showMemberDetails(userId, index) {
+    const m = activeAttendees.find(a => a.user.id === userId)?.user || allMembers.find(user => user.id === userId);
+    if (!m) return;
+
+    const content = document.getElementById('detailsContent');
+    content.innerHTML = `
+      <div class="details-header">
+        <div class="details-avatar" style="background:${getGradient(index)}">${getInitials(m.first_name, m.last_name)}</div>
+        <div class="details-name-wrap">
+          <h3>${m.first_name} ${m.last_name}</h3>
+          <p>${m.role.charAt(0).toUpperCase() + m.role.slice(1)} • ${m.is_verified ? 'Verified Member' : 'Pending Verification'}</p>
+        </div>
+      </div>
+      <div class="details-grid">
+        <div class="details-item">
+          <span class="details-label">Email Address</span>
+          <span class="details-value">${m.email}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Phone Number</span>
+          <span class="details-value">${m.phone || 'Not provided'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Branch</span>
+          <span class="details-value">${m.branch || 'Not specified'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Year of Study</span>
+          <span class="details-value">${m.year || 'Not specified'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Roll Number</span>
+          <span class="details-value">${m.roll_number || 'Not provided'}</span>
+        </div>
+        <div class="details-item">
+          <span class="details-label">Member Since</span>
+          <span class="details-value">${formatDate(m.created_at)}</span>
+        </div>
+      </div>
+    `;
+    document.getElementById('detailsModal').classList.add('open');
+  }
+
+  function closeDetails() {
+    document.getElementById('detailsModal').classList.remove('open');
   }
 
   loadEvents();

@@ -118,6 +118,16 @@ class EventRegistrationResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminEventRegistrationResponse(BaseModel):
+    id: str
+    event_id: str
+    user: UserResponse
+    status: str
+    registered_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # ── Generic ──
 
 class MessageResponse(BaseModel):
